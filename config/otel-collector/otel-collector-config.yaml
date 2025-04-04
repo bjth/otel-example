@@ -1,0 +1,63 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+        max_recv_msg_size_mib: 4
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+    timeout: 1s
+    send_batch_size: 100
+    send_batch_max_size: 100
+  attributes:
+    actions:
+      - key: "loki.attribute.labels"
+        action: "insert"
+        value: "service.name,service.version,service.instance.id,severity_text"
+  resource:
+    attributes:
+      - action: insert
+        key: service.name
+        value: "OpenTelemetryDemo.API"
+
+exporters:
+  otlphttp/mimir:
+    endpoint: "http://mimir:9009/otlp"
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+  otlp/tempo:
+    endpoint: tempo:4317
+    tls:
+      insecure: true
+  otlphttp/loki:
+    endpoint: "http://loki:3100/otlp"
+    tls:
+      insecure: true
+    retry_on_failure:
+      enabled: true
+      initial_interval: 5s
+      max_interval: 30s
+      max_elapsed_time: 300s
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp/tempo]
+    metrics:
+      receivers: [otlp]
+      processors: [batch, resource]
+      exporters: [otlphttp/mimir]
+    logs:
+      receivers: [otlp]
+      processors: [batch, attributes]
+      exporters: [otlphttp/loki] 
