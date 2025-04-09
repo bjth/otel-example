@@ -1,3 +1,4 @@
+using OpenTelemetry.Exporter;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using OpenTelemetry.Metrics;
@@ -21,7 +22,8 @@ public static class OpenTelemetryConfiguration
                 new("deployment.environment", "Production")
             });
 
-        var otlpEndpoint = new Uri(openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://host.docker.internal:4317");
+        // Read endpoint from config, default to localhost gRPC port if not set
+        var otlpEndpoint = new Uri(openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://localhost:4317"); 
 
         services.AddOpenTelemetry()
             .WithTracing(builder =>
@@ -32,6 +34,7 @@ public static class OpenTelemetryConfiguration
                     .AddOtlpExporter(opts =>
                     {
                         opts.Endpoint = otlpEndpoint;
+                        // opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
                     })
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
@@ -44,6 +47,7 @@ public static class OpenTelemetryConfiguration
                     .AddOtlpExporter(opts =>
                     {
                         opts.Endpoint = otlpEndpoint;
+                        // opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
                     })
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()

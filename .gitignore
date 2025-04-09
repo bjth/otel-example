@@ -13,6 +13,10 @@ project.lock.json
 .DS_Store
 *.pyc
 
+# JetBrains Rider
+.idea/
+*.sln.iml
+
 # Docker volumes
 mimir-data/
 tempo-data/

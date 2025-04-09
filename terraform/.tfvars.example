@@ -1,0 +1,11 @@
+# --- AKS Cluster --- 
+aks_cluster_name_prefix = "your-aks-prefix" # Example: "bth-aks-demo"
+aks_resource_group_name = "your-aks-rg"     # Example: "bth-rg-demo"
+kubernetes_version      = "1.28.5"          # Check available versions in your region with: az aks get-versions --location <location> -o table
+# node_pool_name        = "defaultpool"     # Optional: uses default in variables.tf
+node_pool_vm_size       = "Standard_DS2_v2" # Choose appropriate VM size (Standard_DS2_v2 recommended)
+# node_pool_min_count   = 1                 # Optional: uses default in variables.tf
+# node_pool_max_count   = 3                 # Optional: uses default in variables.tf
+# enable_auto_scaling = true                # Optional: uses default in variables.tf
+
+// ... rest of file ... 
