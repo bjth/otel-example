@@ -12,7 +12,7 @@ public static class SerilogConfiguration
         var serviceName = openTelemetryConfig["ServiceName"] ?? "OpenTelemetryDemo.API";
         var serviceVersion = openTelemetryConfig["ServiceVersion"] ?? "1.0.0";
         var serviceInstanceId = openTelemetryConfig["ServiceInstanceId"] ?? Environment.MachineName;
-        var otlpEndpoint = openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://localhost:4317";
+        var otlpEndpoint = new Uri(openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://localhost:4317");
 
         var loggerConfiguration = new LoggerConfiguration()
             .ReadFrom.Configuration(configuration)
@@ -24,13 +24,14 @@ public static class SerilogConfiguration
         // Add OpenTelemetry sink for logs
         loggerConfiguration.WriteTo.OpenTelemetry(options =>
         {
-            options.Endpoint = otlpEndpoint;
+            options.Endpoint = new Uri(otlpEndpoint, "/v1/logs").ToString();
             options.ResourceAttributes = new Dictionary<string, object>
             {
                 ["service.name"] = serviceName,
                 ["service.version"] = serviceVersion,
                 ["service.instance.id"] = serviceInstanceId
             };
+            options.Protocol = OtlpProtocol.HttpProtobuf;
         });
 
         Log.Logger = loggerConfiguration.CreateLogger();

@@ -7,7 +7,8 @@ namespace OpenTelemetryDemo.API.Configuration;
 
 public static class OpenTelemetryConfiguration
 {
-    public static IServiceCollection AddOpenTelemetryServices(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddOpenTelemetryServices(this IServiceCollection services,
+        IConfiguration configuration)
     {
         var openTelemetryConfig = configuration.GetSection("OpenTelemetry");
         var serviceName = openTelemetryConfig["ServiceName"] ?? "OpenTelemetryDemo.API";
@@ -16,14 +17,14 @@ public static class OpenTelemetryConfiguration
 
         var resourceBuilder = ResourceBuilder.CreateDefault()
             .AddService(serviceName: serviceName, serviceVersion: serviceVersion)
-            .AddAttributes(new KeyValuePair<string, object>[]
-            {
+            .AddAttributes([
                 new("service.instance.id", serviceInstanceId),
                 new("deployment.environment", "Production")
-            });
+            ]);
 
         // Read endpoint from config, default to localhost gRPC port if not set
-        var otlpEndpoint = new Uri(openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://localhost:4317"); 
+        var otlpEndpoint =
+            new Uri(openTelemetryConfig.GetSection("Exporters:Otlp:Endpoint").Value ?? "http://localhost:4317");
 
         services.AddOpenTelemetry()
             .WithTracing(builder =>
@@ -33,8 +34,8 @@ public static class OpenTelemetryConfiguration
                     .SetResourceBuilder(resourceBuilder)
                     .AddOtlpExporter(opts =>
                     {
-                        opts.Endpoint = otlpEndpoint;
-                        // opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
+                        opts.Endpoint = new Uri(otlpEndpoint, "/v1/traces");
+                        opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
                     })
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation();
@@ -46,8 +47,8 @@ public static class OpenTelemetryConfiguration
                     .SetResourceBuilder(resourceBuilder)
                     .AddOtlpExporter(opts =>
                     {
-                        opts.Endpoint = otlpEndpoint;
-                        // opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
+                        opts.Endpoint = new Uri(otlpEndpoint, "/v1/metrics");
+                        opts.Protocol = OtlpExportProtocol.HttpProtobuf; // Removed - Use default gRPC
                     })
                     .AddAspNetCoreInstrumentation()
                     .AddHttpClientInstrumentation()
@@ -56,4 +57,4 @@ public static class OpenTelemetryConfiguration
 
         return services;
     }
-} 
+}
